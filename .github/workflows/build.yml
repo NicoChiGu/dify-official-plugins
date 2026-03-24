@@ -6,9 +6,13 @@ on:
       - "v*"
   workflow_dispatch:
     inputs:
+      model:
+        description: "openapi"
+        required: true
       version:
         description: "Version (e.g. v1.0.0)"
         required: true
+        default: "1.0.0"
       release:
         description: "Publish to Release?"
         required: true
@@ -57,7 +61,7 @@ jobs:
 
       # 🏗 打包
       - name: 🏗 Build plugin
-        run: dify-plugin package
+        run: dify-plugin package models/${{ env. }}
 
       # 🔍 Debug
       - name: 🔍 Check dist
