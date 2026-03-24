@@ -40,7 +40,30 @@ jobs:
         run: |
           mkdir -p ./models
           git clone https://github.com/NicoChiGu/openai_api_compatible ./models/openai_api_compatible
+          
+      - name: Download latest Dify CLI
+        run: |
+          # 选择 Linux AMD64
+          DIFY_CLI_URL="https://github.com/langgenius/dify-plugin-daemon/releases/download/0.5.4/dify-plugin-linux-amd64"
+          curl -L -o dify-cli "$DIFY_CLI_URL"
+          chmod +x dify-cli
+          sudo mv dify-cli /usr/local/bin/dify
+          
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
 
+      - name: 📚 Install project deps
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi   
+          
+      - name: 📚 Install model deps
+        run: |
+          MODEL="${{ github.event.inputs.model }}"
+          if [ -f "./models/$MODEL/requirements.txt" ]; then
+            pip install -r "./models/$MODEL/requirements.txt"
+          fi
+          
       - name: 🏷 Determine version
         id: vars
         run: |
