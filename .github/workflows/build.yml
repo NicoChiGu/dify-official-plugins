@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: "openapi"
+        description: "Model Name"
         required: true
       version:
         description: "Version (e.g. v1.0.0)"
