@@ -73,13 +73,35 @@ jobs:
           else
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           fi
-
-      # 🏗 打包
-      - name: 🏗 Build plugin
+          
+      # 🏗 Prepare UV environment and pre-install deps
+      - name: 🏗 Pre-install dependencies in plugin
         run: |
           MODEL="${{ github.event.inputs.model }}"
           mkdir -p ./dist
-          dify plugin package "models/$MODEL" --output_path "./dist/$MODEL.difypkg"
+
+          # 创建临时虚拟环境
+          VENV_DIR=".venv-$MODEL"
+          python -m venv "$VENV_DIR"
+          source "$VENV_DIR/bin/activate"
+
+          # 升级 pip 并安装插件依赖
+          pip install --upgrade pip
+          if [ -f "models/$MODEL/requirements.txt" ]; then
+            pip install -r "models/$MODEL/requirements.txt"
+          fi
+          
+          # 安装 dify-plugin 本身
+          pip install dify-plugin
+
+          # 打包插件，同时把虚拟环境一起打进去
+          dify plugin package "models/$MODEL" \
+            --output_path "./dist/$MODEL.difypkg" \
+            --include-venv "$VENV_DIR"
+
+          # 清理虚拟环境
+          deactivate
+          rm -rf "$VENV_DIR"
 
       # 🔍 Debug
       - name: 🔍 Check dist
