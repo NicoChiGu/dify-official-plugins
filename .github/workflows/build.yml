@@ -34,6 +34,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          
+      - name: Download latest Dify CLI
+        run: |
+          # 选择 Linux AMD64
+          DIFY_CLI_URL="https://github.com/langgenius/dify-plugin-daemon/releases/download/0.5.4/dify-plugin-linux-amd64"
+          curl -L -o dify-cli "$DIFY_CLI_URL"
+          chmod +x dify-cli
+          sudo mv dify-cli /usr/local/bin/dify
 
       - name: 📦 Install dependencies
         run: |
