@@ -104,8 +104,8 @@ jobs:
         with:
           name: dify-plugin-${{ github.event.inputs.model }}-${{ env.VERSION }}
           path: |
-            dist/*.difypkg
-            dist/*.difybndl
+            offline-packager/difypkg/*.difypkg
+            offline-packager/difypkg/*.difybndl
 
       - name: 🚀 Create Release
         if: |
@@ -116,7 +116,7 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: Release ${{ env.VERSION }}
           path: |
-            dist/*.difypkg
-            dist/*.difybndl
+            offline-packager/difypkg/*.difypkg
+            offline-packager/difypkg/*.difybndl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
