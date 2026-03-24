@@ -103,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dify-plugin-${{ github.event.inputs.model }}-${{ env.VERSION }}
-          files: |
+          path: |
             offline-packager/difypkg/*.difypkg
 
       - name: 🚀 Create Release
