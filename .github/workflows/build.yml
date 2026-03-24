@@ -92,7 +92,9 @@ jobs:
           ls $GITHUB_WORKSPACE/dist
 
           # 运行 Docker Compose 打包
-          docker compose run --rm packager --local "$GITHUB_WORKSPACE/dist/$MODEL.difypkg"
+          docker compose run --rm \
+            -v "$GITHUB_WORKSPACE/dist:/dist" \
+            packager --local "/dist/$MODEL.difypkg"
 
       - name: 🔍 Check dist
         run: ls -lah offline-packager/difypkg
