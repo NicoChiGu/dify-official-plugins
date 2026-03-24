@@ -79,7 +79,7 @@ jobs:
         run: |
           MODEL="${{ github.event.inputs.model }}"
           mkdir -p ./dist
-          dify plugin package "models/$MODEL" --output_path ./dist
+          dify plugin package "models/$MODEL" --output_path "./dist/$MODEL.difypkg"
 
       # 🔍 Debug
       - name: 🔍 Check dist
