@@ -78,7 +78,7 @@ jobs:
       - name: 🏗 Build plugin
         run: |
           MODEL="${{ github.event.inputs.model }}"
-          dify package "models/$MODEL"
+          dify plugin package "models/$MODEL"
 
       # 🔍 Debug
       - name: 🔍 Check dist
