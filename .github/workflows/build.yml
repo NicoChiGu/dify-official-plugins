@@ -115,6 +115,8 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: Release ${{ env.VERSION }}
-          files: offline-packager/difypkg/*
+          path: |
+            dist/*.difypkg
+            dist/*.difybndl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
