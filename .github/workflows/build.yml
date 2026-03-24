@@ -25,46 +25,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          
-      - name: Download latest Dify CLI
-        run: |
-          # 选择 Linux AMD64
-          DIFY_CLI_URL="https://github.com/langgenius/dify-plugin-daemon/releases/download/0.5.4/dify-plugin-linux-amd64"
-          curl -L -o dify-cli "$DIFY_CLI_URL"
-          chmod +x dify-cli
-          sudo mv dify-cli /usr/local/bin/dify
+      - name: 🐳 Setup Docker Compose
+        uses: docker/setup-buildx-action@v2
 
-      - name: 📦 Install dependencies
-        run: |
-          pip install --upgrade pip
-
-      - name: 📚 Install project deps
-        run: |
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      # 🪝 拉取其他仓库到 ./models/openai_api_compatible
-      - name: 📂 Clone openai_api_compatible
+      - name: 🪝 Clone openai_api_compatible
         run: |
           mkdir -p ./models
           git clone https://github.com/NicoChiGu/openai_api_compatible ./models/openai_api_compatible
-          
-      - name: 📚 Install model deps
-        run: |
-          MODEL="${{ github.event.inputs.model }}"
-          if [ -f "./models/$MODEL/requirements.txt" ]; then
-            pip install -r "./models/$MODEL/requirements.txt"
-          fi
 
-      # 🏷 统一版本号来源
       - name: 🏷 Determine version
         id: vars
         run: |
@@ -73,50 +49,42 @@ jobs:
           else
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           fi
-          
-      # 🏗 Prepare UV environment and pre-install deps
-      - name: 🏗 Pre-install dependencies in plugin
+
+      - name: 📦 Prepare offline packager
         run: |
+          # 拉取 dify-plugin-offline-packager 仓库
+          git clone https://github.com/kurokobo/dify-plugin-offline-packager ./offline-packager
+
+          # 进入 packager 目录
+          cd offline-packager
+
+          # 拷贝要打包的模型插件
           MODEL="${{ github.event.inputs.model }}"
-          mkdir -p ./dist
+          mkdir -p ./plugins
+          cp -r ../models/$MODEL ./plugins/$MODEL
 
-          # 创建临时虚拟环境
-          VENV_DIR=".venv-$MODEL"
-          python -m venv "$VENV_DIR"
-          source "$VENV_DIR/bin/activate"
+          # 创建输出目录
+          mkdir -p ./output
 
-          # 升级 pip 并安装插件依赖
-          pip install --upgrade pip
-          if [ -f "models/$MODEL/requirements.txt" ]; then
-            pip install -r "models/$MODEL/requirements.txt"
-          fi
-          
-          # 安装 dify-plugin 本身
-          pip install dify-plugin
+          # 设置版本
+          echo ${{ env.VERSION }} > ./plugins/$MODEL/version.txt
 
-          # 打包插件，同时把虚拟环境一起打进去
-          dify plugin package "models/$MODEL" \
-            --output_path "./dist/$MODEL.difypkg" \
-            --include-venv "$VENV_DIR"
+          # 运行 Docker Compose 打包
+          docker compose run --rm packager bash -c "
+            set -e
+            echo '=== Building plugin $MODEL ==='
+            ./pack.sh plugins/$MODEL output/$MODEL.difypkg
+          "
 
-          # 清理虚拟环境
-          deactivate
-          rm -rf "$VENV_DIR"
-
-      # 🔍 Debug
       - name: 🔍 Check dist
-        run: ls -lah dist
+        run: ls -lah offline-packager/output
 
-      # 📦 上传构建产物（始终执行）
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: dify-plugin-${{ github.event.inputs.model }}-${{ env.VERSION }}
-          path: |
-            dist/*.difypkg
-            dist/*.difybndl
+          path: offline-packager/output/*
 
-      # 🚀 条件发布 Release（核心）
       - name: 🚀 Create Release
         if: |
           (github.event_name == 'push') ||
@@ -125,8 +93,6 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: Release ${{ env.VERSION }}
-          files: |
-            dist/*.difypkg
-            dist/*.difybndl
+          files: offline-packager/output/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
