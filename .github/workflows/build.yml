@@ -64,6 +64,7 @@ jobs:
             echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
           else
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          fi
 
       # 🏗 打包
       - name: 🏗 Build plugin
