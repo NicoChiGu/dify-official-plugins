@@ -49,41 +49,34 @@ jobs:
           else
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           fi
+          
+      # 🏗 打包
+      - name: 🏗 Build plugin
+        run: |
+          MODEL="${{ github.event.inputs.model }}"
+          mkdir -p ./dist
+          dify plugin package "models/$MODEL" --output_path "./dist/$MODEL.difypkg"
 
       - name: 📦 Prepare offline packager
         run: |
+          MODEL="${{ github.event.inputs.model }}"
           # 拉取 dify-plugin-offline-packager 仓库
           git clone https://github.com/kurokobo/dify-plugin-offline-packager ./offline-packager
 
           # 进入 packager 目录
           cd offline-packager
 
-          # 拷贝要打包的模型插件
-          MODEL="${{ github.event.inputs.model }}"
-          mkdir -p ./plugins
-          cp -r ../models/$MODEL ./plugins/$MODEL
-
-          # 创建输出目录
-          mkdir -p ./output
-
-          # 设置版本
-          echo ${{ env.VERSION }} > ./plugins/$MODEL/version.txt
-
           # 运行 Docker Compose 打包
-          docker compose run --rm packager bash -c "
-            set -e
-            echo '=== Building plugin $MODEL ==='
-            ./pack.sh plugins/$MODEL output/$MODEL.difypkg
-          "
+          docker compose run --rm packager --local "../dist/$MODEL.difypkg"
 
       - name: 🔍 Check dist
-        run: ls -lah offline-packager/output
+        run: ls -lah offline-packager/difypkg
 
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: dify-plugin-${{ github.event.inputs.model }}-${{ env.VERSION }}
-          path: offline-packager/output/*
+          path: offline-packager/difypkg/*
 
       - name: 🚀 Create Release
         if: |
