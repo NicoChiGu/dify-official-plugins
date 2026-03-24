@@ -113,6 +113,6 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: Release ${{ env.VERSION }}
-          files: offline-packager/output/*
+          files: offline-packager/difypkg/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
