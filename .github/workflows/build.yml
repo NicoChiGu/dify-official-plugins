@@ -48,6 +48,13 @@ jobs:
         run: |
           mkdir -p ./models
           git clone https://github.com/NicoChiGu/openai_api_compatible ./models/openai_api_compatible
+          
+      - name: 📚 Install model deps
+        run: |
+          MODEL="${{ github.event.inputs.model }}"
+          if [ -f "./models/$MODEL/requirements.txt" ]; then
+            pip install -r "./models/$MODEL/requirements.txt"
+          fi
 
       # 🏷 统一版本号来源
       - name: 🏷 Determine version
@@ -60,7 +67,9 @@ jobs:
 
       # 🏗 打包
       - name: 🏗 Build plugin
-        run: dify package models/${{ env.MODEL }}
+        run: |
+          MODEL="${{ github.event.inputs.model }}"
+          dify package "models/$MODEL"
 
       # 🔍 Debug
       - name: 🔍 Check dist
@@ -70,7 +79,7 @@ jobs:
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dify-plugin-${{ env.MODEL }}-${{ env.VERSION }}
+          name: dify-plugin-${{ github.event.inputs.model }}-${{ env.VERSION }}
           path: |
             dist/*.difypkg
             dist/*.difybndl
