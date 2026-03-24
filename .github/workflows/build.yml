@@ -85,16 +85,14 @@ jobs:
           MODEL="${{ github.event.inputs.model }}"
           # 拉取 dify-plugin-offline-packager 仓库
           git clone https://github.com/kurokobo/dify-plugin-offline-packager ./offline-packager
-
-          
-          mkdir -p ./offline-packager/difypkg
-          cp "./dist/$MODEL.difypkg" ./offline-packager/
           
           # 进入 packager 目录
           cd offline-packager
+          ls $GITHUB_WORKSPACE
+          ls $GITHUB_WORKSPACE/dist
 
           # 运行 Docker Compose 打包
-          docker compose run --rm packager --local "/difypkg/$MODEL.difypkg"
+          docker compose run --rm packager --local "$GITHUB_WORKSPACE/dist/$MODEL.difypkg"
 
       - name: 🔍 Check dist
         run: ls -lah offline-packager/difypkg
