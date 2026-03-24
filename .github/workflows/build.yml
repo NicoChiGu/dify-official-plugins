@@ -38,7 +38,6 @@ jobs:
       - name: 📦 Install dependencies
         run: |
           pip install --upgrade pip
-          pip install dify-plugin
 
       - name: 📚 Install project deps
         run: |
@@ -61,7 +60,7 @@ jobs:
 
       # 🏗 打包
       - name: 🏗 Build plugin
-        run: dify-plugin package models/${{ env. }}
+        run: dify package models/${{ env.MODEL }}
 
       # 🔍 Debug
       - name: 🔍 Check dist
@@ -71,7 +70,7 @@ jobs:
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dify-plugin-${{ env.VERSION }}
+          name: dify-plugin-${{ env.MODEL }}-${{ env.VERSION }}
           path: |
             dist/*.difypkg
             dist/*.difybndl
