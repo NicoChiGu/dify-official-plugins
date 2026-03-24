@@ -78,7 +78,7 @@ jobs:
       - name: 🏗 Build plugin
         run: |
           MODEL="${{ github.event.inputs.model }}"
-          mkdir -p dist
+          mkdir -p ./dist
           dify plugin package "models/$MODEL" --output_path ./dist
 
       # 🔍 Debug
